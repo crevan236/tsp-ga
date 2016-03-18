@@ -95,7 +95,8 @@ void mutatePerson(int *person, const int N) {
     }
 }
 void OXCrossover(int *fparent, int *sparent, int *fchild, int *schild, const int N) {
-    int mother[N], father[N];
+    //This is not working yet!!!
+    /*int mother[N], father[N];
     for(int i = 0; i < N; ++i) {
         mother[i] = fparent[i];
         father[i] = sparent[i];
@@ -150,7 +151,7 @@ void OXCrossover(int *fparent, int *sparent, int *fchild, int *schild, const int
     for(int i = 0; i < N; ++i) {
         cout<<fchild[i]<<">>";
     }
-    cout<<endl;
+    cout<<endl;*/
 }
 
 ///////////////////////////////////////////////////////
