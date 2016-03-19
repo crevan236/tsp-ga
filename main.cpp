@@ -71,17 +71,18 @@ namespace tsp_functions {
             person[i] = -1;
         }
     }
-    void eviromentFunction(const int N, const double **Points, int **population, double *roads) {
-        // znajdujemy najdłuższe drogi i je oznaczamy
-        for(int i = 0; i < N/2; ++i) {
+    void eviromentFunction(const int N, const int poplSize, const double **Points, int **population, double *roads) {
+        // znajdujemy najdłuższe drogi i je oznaczamy (alg wyszukiwania maksimum)
+        for(int i = 0; i < poplSize/2; ++i) {
             int max = 0;
-            for(int j = 1; j < N; ++j) {
-                if(roads[j] > roads[max]) max = j;
+            for(int j = 0; j < poplSize; ++j) {
+                if(roads[j] > roads[max])
+                    max = j;
             }
             roads[max] = -1;
         }
-        // kill targets
-        for(int i = 0; i < N; i++) {
+        // zabijamy najsłabsze osobniki
+        for(int i = 0; i < poplSize; ++i) {
             if(-1 == roads[i]) {
                 killPerson(population[i], N);
             }
@@ -146,52 +147,63 @@ namespace tsp_functions {
         }
     }
     void TSPGenetic(int N, const double **Points, int *Route) {
-        int **population = new int *[N];
-        for(int i = 0; i < N; ++i) {
-            population[i] = new int [N];
+        // Wyznaczamy ilość osobników w populacji
+        int poplSize = N;
+        if(N > 100) {
+            poplSize = 100;
         }
-        //////////
-        for(int i = 0; i < N; ++i) {
+        // Tworzymy populacje początkową
+        int **population = new int *[poplSize];
+        for(int i = 0; i < poplSize; ++i) {
+            population[i] = new int [N]; //każdy osobnik ma N genów
+        }
+        // wypełniamy populację tak, aby potem odpalić algorytm zachłanny od różnych punktów
+        for(int i = 0; i < poplSize; ++i) {
             int c = i;
             for(int j = 0; j < N; ++j) {
-                if(c == N) c = 0;
+                if(c == N)
+                    c = 0;
                 population[i][j] = c;
                 c++;
             }
         }
-        for(int i = 0; i < N; ++i) {
+        // Algorytm zachłanny stworzy osobniki różniące się od siebie
+        for(int i = 0; i < poplSize; ++i) {
             TSPGreedy(N, Points, population[i]);
         }
-        //////////
-        double roads[N];
-        for(int i = 0; i < N; ++i) {
+        // Szukamy najlepszego osobnika
+        double roads[poplSize];
+        for(int i = 0; i < poplSize; ++i) {
             roads[i] = measureTheRoad(population[i], Points, N);
         }
         int winner = 0;
-        for(int i = 0; i < N; ++i) {
-            if(roads[i] < roads[winner])
+        for(int i = 0; i < poplSize; ++i) {
+            if(roads[i] < roads[winner]) //Algorytm wyszukiwania minimum (najkrótszej z dróg)
                 winner = i;
         }
-        for(int i = 0; i < N; ++i) {
+        for(int i = 0; i < N; ++i) { //Zapisujemy najkrótszą drogę do Route, żeby potem jej nie stracić
             Route[i] = population[winner][i];
         }
         double bestSolution = roads[winner];
         cout << "The best solution is: " << bestSolution << endl;
         //////////
+        // Główna pętla iterująca
         for(int t = 0; t < 500; ++t) {
             //--------
-            eviromentFunction(N, Points, population, roads);
+            // Funkcja odpowiadająca środowisku, które wyeliminuje osobniki nie przystosowane
+            eviromentFunction(N, poplSize, Points, population, roads);
             //--------
+            // Zliczamy ilość wyeliminowanych osobników
             int deadPer = 0;
-            for(int i = 0; i < N; ++i) {
+            for(int i = 0; i < poplSize; ++i) {
                 if(-1 == population[i][1])
                     deadPer++;
             }
-            int livingPer = N-deadPer;
-
+            int livingPer = poplSize - deadPer;
+            // Grupujemy rodziców i miejsca na powstanie dzieci do Przeprowadzenia krzyżowania
             int children[deadPer], parents[livingPer];
             int c = 0, p = 0;
-            for(int i = 0; i < N; ++i) {
+            for(int i = 0; i < poplSize; ++i) {
                 if(population[i][1] == -1) {
                     children[c] = i;
                     c++;
@@ -202,36 +214,50 @@ namespace tsp_functions {
                 }
             }
             //--------
+            // Jeżeli liczba osobników martwych jest nieparzysta, zwiekszamy ją o 1
+            // dlatego, że rozmnażając dwa osobniki tworzymy dwójke potomstwa
+            // zatem ilość dzieci musi być parzysta
             if(0 != (deadPer & 1)) {
                 ++deadPer;
             }
+            // Losujemy dwoje różnych rodziców
             for(int i = 0; i < deadPer; i += 2) {
                 int mother, father, j = i;
                 mother = parents[rand()%livingPer];
                 do {
                     father = parents[rand()%livingPer];
                 } while(mother == father);
+                // Wybieramy dwa miejsca na potomstwo
                 int fchild = children[j];
-                if((j+1 == deadPer-1) && (0 != (N-livingPer & 1)))
+                // Jeżeli musieliśmy zinkrementować ilość dzieci
+                // to musimy "nadpisać" piersze dziecko ostatnim stworzonym
+                // Bo inaczej przekroczyli byśmy indeks tablicy (j+1)
+                if((j+1 == deadPer-1) && (0 != ((poplSize-livingPer) & 1)))
                     j = 0;
                 int schild = children[j+1];
+                // Krzyżujemy
                 ModifiedOXCrossover(population[mother], population[father], population[fchild], population[schild], N);
             }
             //--------
-            for(int i = 0; i < N/20; ++i) {
-                mutatePerson(population[rand()%N], N);
+            // Mutujemy małą część społeczeństwa
+            for(int i = 0; i < poplSize/20; ++i) {
+                mutatePerson(population[rand()%poplSize], N);
             }
             //--------
-            for(int i = 0; i < N; ++i) {
+            // Mierzymy długości dróg (znowu) żeby sprawdzić czy polepszyliśmy rozwiązania
+            for(int i = 0; i < poplSize; ++i) {
                 roads[i] = measureTheRoad(population[i], Points, N);
             }
             int winner = 0;
-            for(int i = 0; i < N; ++i) {
+            for(int i = 0; i < poplSize; ++i) {
                 if(roads[i] < roads[winner])
                     winner = i;
             }
             //--------
+            // Jeżeli polepszyliśmy nasze rozwiązanie (bliskie optimum)
+            // to zapisujemy je w miejsce poprzedniego
             if(roads[winner] < bestSolution) {
+                // Zapisujemy winner do Route
                 for(int i = 0; i < N; ++i) {
                     Route[i] = population[winner][i];
                 }
@@ -240,7 +266,7 @@ namespace tsp_functions {
             }
         }
         //////////
-        for(int i = 0; i < N; i++) {
+        for(int i = 0; i < poplSize; ++i) {
             delete [] population[i];
         }
         delete [] population;
