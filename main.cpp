@@ -311,20 +311,6 @@ int main()
     delete [] Points;
     Points = NULL;
 
-    /*int mother[] = {2, 3, 4, 1, 5, 8, 9, 7, 0, 6};
-    int father[] = {3, 6, 1, 0, 8, 9, 4, 7, 5, 2};
-    int fchild[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    int schild[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    int m = 0;
-    OXCrossover(mother, father, fchild, schild, 10);
-    for(int i = 0; i < 10; ++i) {
-            cout<<fchild[i]<<">>";
-        }
-    cout<<endl;
-    for(int i = 0; i < 10; ++i) {
-            cout<<schild[i]<<">>";
-        }
-    cout<<endl;*/
 
     return 0;
 }
