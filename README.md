@@ -1,2 +1,2 @@
 # tsp-ga
-My genetic algorithm for TSP problem.
+Algorytm, szukający rozwiązania problemu komiwojarzera, które będzie bliskie optimum globalnemu. Tworzy on populację początkową poprzez wykonanie algorytmu zachłannego, dla pierwszych N dla N < 100 lub 100 dla N >= 100 punktów (gdzie N to ilość miast). Natępnie program próbuje geentycznie ulepszyć otrzymaną populację, poprzez stosowanie na niej operatorów eliminacji, krzyżowania i mutacji. Jeżeli w otrzymanej populacji znajdzie się osobnik lepszy od dotychczasowego najlepszego, to zostaje on zamieniony i algorytm wykonuje się dalej.
